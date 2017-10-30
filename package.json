@@ -1,5 +1,5 @@
 {
-  "name": "@leveloneproject/dfsp-ledger",
+  "name": "@mojaloop/dfsp-ledger",
   "version": "2.0.0-quotes.29",
   "description": "DFSP Ledger service",
   "main": "index.js",
@@ -60,7 +60,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:LevelOneProject/dfsp-ledger.git"
+    "url": "git@github.com:mojaloop/dfsp-ledger.git"
   },
   "engines": {
     "node": ">=4.4.7",
