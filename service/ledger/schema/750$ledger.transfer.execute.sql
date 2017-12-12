@@ -28,7 +28,7 @@ $body$
         "@debitAccountId" INT;
         "@creditAccountId" INT;
         "@amount" numeric(19,2);
-        "@transferStateId" INT;
+        "@transferState" varchar(25);
         -- GL accounts
         "@feeAccountId" bigint;
         "@commissionAccountId" bigint;
@@ -49,28 +49,45 @@ $body$
             t."cancellationCondition",
             t."debitAccountId",
             t."creditAccountId",
-            t."transferStateId",
-            t."amount"
+            t."amount",
+            ts."name"
         INTO
             "@executionCondition",
             "@cancellationCondition",
             "@debitAccountId",
             "@creditAccountId",
-            "@transferStateId",
-            "@amount"
+            "@amount",
+            "@transferState"
         FROM
             ledger.transfer t
+        JOIN
+            ledger."transferState" ts
+        ON
+            t."transferStateId" = ts."transferStateId"
         WHERE
             t."paymentId" = "@paymentId";
 
-        IF ("@transferStateId" != (
-              SELECT "transferStateId"
-              FROM ledger."transferState"
-              WHERE name = 'prepared'
-            )
-        )
+
+        IF ("@transferState" IS NULL)
         THEN
-            RAISE EXCEPTION 'ledger.transfer.execute.alreadyExists';
+              -- handle non existing transfer
+        ELSEIF ("@transferState" != 'prepared')
+        THEN
+            IF (
+                ("@transferState" = 'executed' AND "@condition" = "@executionCondition")
+                    OR
+                ("@transferState" = 'rejected' AND "@condition" = "@cancellationCondition")
+            )
+            THEN
+                RETURN query
+                    SELECT
+                        *
+                    FROM
+                        ledger."transfer.get"("@paymentId");
+                RETURN;
+            ELSE
+                RAISE EXCEPTION 'ledger.transfer.execute.alreadyExists';
+            END IF;
         END IF;
 
         -- quotes
